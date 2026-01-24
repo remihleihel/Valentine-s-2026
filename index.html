@@ -1,0 +1,957 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>💘 Valentine Riddle Quest</title>
+  <meta name="theme-color" content="#ff2d55" />
+  <style>
+    :root{
+      --bg1:#120014;
+      --bg2:#2a0028;
+      --card:#ffffff10;
+      --stroke:#ffffff22;
+      --text:#fff7fb;
+      --muted:#ffd6e6cc;
+      --hot:#ff2d55;
+      --hot2:#ff5ea8;
+      --gold:#ffd27d;
+      --ok:#40ffb0;
+      --bad:#ff4d6d;
+      --shadow: 0 18px 60px #00000066;
+      --radius: 18px;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+    }
+
+    *{ box-sizing:border-box; }
+    html,body{ height:100%; }
+    body{
+      margin:0;
+      font-family:var(--sans);
+      color:var(--text);
+      overflow-x:hidden;
+      background:
+        radial-gradient(1200px 700px at 15% 10%, #ff2d5533, transparent 60%),
+        radial-gradient(900px 700px at 85% 15%, #ff5ea833, transparent 60%),
+        radial-gradient(900px 900px at 50% 100%, #ffd27d22, transparent 70%),
+        linear-gradient(160deg, var(--bg1), var(--bg2));
+    }
+
+    /* subtle sparkle */
+    .noise{
+      position:fixed; inset:0; pointer-events:none;
+      opacity:.06;
+      background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='.55'/%3E%3C/svg%3E");
+      mix-blend-mode:overlay;
+    }
+
+    /* floating hearts background */
+    .hearts{ position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:1; }
+    .heart{
+      position:absolute;
+      bottom:-80px;
+      width:16px; height:16px;
+      transform:rotate(45deg);
+      background:linear-gradient(135deg, var(--hot), var(--hot2));
+      filter:drop-shadow(0 8px 16px #ff2d5533);
+      border-radius:4px;
+      animation: floatUp linear forwards;
+      opacity:.75;
+    }
+    .heart:before, .heart:after{
+      content:"";
+      position:absolute;
+      width:16px; height:16px;
+      border-radius:50%;
+      background:inherit;
+      top:-8px; left:0;
+    }
+    .heart:after{ left:-8px; top:0; }
+
+    @keyframes floatUp{
+      0%{ transform:translateY(0) rotate(45deg) scale(.9); opacity:0; }
+      10%{ opacity:.85; }
+      100%{ transform:translateY(-120vh) rotate(45deg) scale(1.2); opacity:0; }
+    }
+
+    /* flower emoji pop */
+    .emojiLayer{ position:fixed; inset:0; pointer-events:none; overflow:hidden; z-index:60; }
+    .emoji{
+      position:absolute;
+      bottom:-40px;
+      font-size:22px;
+      filter: drop-shadow(0 10px 18px #00000055);
+      animation: emojiUp linear forwards;
+      opacity:0;
+      transform: translateZ(0);
+      user-select:none;
+    }
+    @keyframes emojiUp{
+      0%{ transform:translateY(0) scale(.9); opacity:0; }
+      12%{ opacity:1; }
+      100%{ transform:translateY(-120vh) scale(1.25); opacity:0; }
+    }
+
+    /* layout */
+    .wrap{
+      max-width:1100px;
+      margin:0 auto;
+      padding:36px 18px 64px;
+      position:relative;
+      z-index:2;
+    }
+    header{
+      display:flex;
+      gap:18px;
+      align-items:flex-start;
+      justify-content:space-between;
+      flex-wrap:wrap;
+      margin-bottom:22px;
+    }
+    .brand{
+      display:flex; gap:14px; align-items:center;
+    }
+
+    .logoWrap{
+      width:46px; height:46px;
+      border-radius:14px;
+      box-shadow:0 18px 50px #ff2d5533;
+      position:relative;
+      overflow:hidden;
+      border:1px solid #ffffff22;
+      background:linear-gradient(135deg, #ff2d5522, #ff5ea822);
+      flex:0 0 auto;
+    }
+    .logoImg{
+      width:100%; height:100%;
+      object-fit:cover;
+      display:block;
+      transform:translateZ(0);
+    }
+    .logoWrap:after{
+      content:"";
+      position:absolute; inset:-60%;
+      background:linear-gradient(45deg, transparent, #ffffff55, transparent);
+      transform:rotate(25deg);
+      animation: shine 3.6s ease-in-out infinite;
+      pointer-events:none;
+    }
+    @keyframes shine{
+      0%,55%{ transform:translateX(-30%) translateY(-10%) rotate(25deg); opacity:0; }
+      70%{ opacity:.8; }
+      100%{ transform:translateX(30%) translateY(10%) rotate(25deg); opacity:0; }
+    }
+
+    h1{
+      margin:0;
+      font-size: clamp(24px, 3vw, 34px);
+      letter-spacing:.2px;
+      line-height:1.1;
+    }
+    .sub{
+      margin:6px 0 0;
+      color:var(--muted);
+      font-size:14px;
+      max-width:62ch;
+    }
+
+    .top-right{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .pill{
+      border:1px solid var(--stroke);
+      background:linear-gradient(180deg, #ffffff10, #ffffff08);
+      padding:10px 12px;
+      border-radius:999px;
+      box-shadow: 0 12px 40px #00000033;
+      backdrop-filter: blur(10px);
+      display:flex; gap:10px; align-items:center;
+      font-size:13px;
+      color:var(--muted);
+    }
+    .pill b{ color:var(--text); font-weight:700; }
+
+    .btn{
+      cursor:pointer;
+      border:1px solid #ffffff2a;
+      background:linear-gradient(135deg, #ffffff12, #ffffff08);
+      color:var(--text);
+      padding:10px 12px;
+      border-radius:12px;
+      transition:transform .12s ease, border-color .12s ease, background .12s ease;
+      box-shadow: 0 16px 45px #0000003a;
+      backdrop-filter: blur(10px);
+      font-weight:600;
+      user-select:none;
+    }
+    .btn:hover{ transform:translateY(-1px); border-color:#ffffff44; }
+    .btn:active{ transform:translateY(0px) scale(.99); }
+    .btn.hot{
+      border-color:#ff2d5570;
+      background:linear-gradient(135deg, #ff2d5530, #ff5ea820);
+      box-shadow: 0 18px 55px #ff2d5530;
+    }
+
+    .hero{
+      border:1px solid var(--stroke);
+      background:linear-gradient(180deg, var(--card), #ffffff06);
+      border-radius:var(--radius);
+      padding:18px;
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(12px);
+      position:relative;
+      overflow:hidden;
+    }
+    .hero:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(600px 300px at 20% 0%, #ff2d5530, transparent 60%),
+        radial-gradient(500px 300px at 80% 10%, #ff5ea830, transparent 60%),
+        radial-gradient(450px 340px at 50% 120%, #ffd27d18, transparent 60%);
+      pointer-events:none;
+    }
+    .hero-inner{ position:relative; display:flex; gap:14px; align-items:flex-start; flex-wrap:wrap; }
+    .countdown{
+      flex:1 1 260px;
+      min-width:260px;
+      padding:14px;
+      border-radius:14px;
+      background:linear-gradient(180deg, #ffffff10, #ffffff08);
+      border:1px solid #ffffff26;
+    }
+    .countdown .label{
+      font-size:12px;
+      color:var(--muted);
+      margin-bottom:6px;
+      letter-spacing:.3px;
+      text-transform:uppercase;
+    }
+    .countdown .time{
+      font-family:var(--mono);
+      font-size:18px;
+      color:var(--text);
+    }
+    .progress{
+      flex:2 1 380px;
+      min-width:300px;
+      padding:14px;
+      border-radius:14px;
+      background:linear-gradient(180deg, #ffffff10, #ffffff08);
+      border:1px solid #ffffff26;
+    }
+    .bar{
+      height:12px;
+      border-radius:999px;
+      background:#ffffff10;
+      border:1px solid #ffffff22;
+      overflow:hidden;
+      margin-top:10px;
+    }
+    .bar > div{
+      height:100%;
+      width:0%;
+      background:linear-gradient(90deg, var(--hot), var(--hot2));
+      border-radius:999px;
+      transition:width .25s ease;
+    }
+
+    .list{
+      margin-top:16px;
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .card{
+      border:1px solid var(--stroke);
+      background:linear-gradient(180deg, var(--card), #ffffff06);
+      border-radius:var(--radius);
+      padding:16px;
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(12px);
+      position:relative;
+      overflow:hidden;
+      cursor:pointer;
+      user-select:none;
+      transition: transform .12s ease;
+    }
+    .card.disabled{ cursor:not-allowed; opacity:.75; }
+    .card:active{ transform:scale(.995); }
+
+    .card .top{
+      display:flex;
+      justify-content:space-between;
+      align-items:flex-start;
+      gap:10px;
+      margin-bottom:0px;
+    }
+    .badge{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      font-size:12px;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid #ffffff24;
+      background:linear-gradient(180deg, #ffffff10, #ffffff08);
+      color:var(--muted);
+      white-space:nowrap;
+    }
+    .badge .dot{
+      width:8px; height:8px; border-radius:50%;
+      background:#ffffff33;
+      box-shadow:0 0 0 4px #ffffff10;
+    }
+    .badge.open .dot{ background:var(--ok); box-shadow:0 0 0 4px #40ffb022; }
+    .badge.locked .dot{ background:#ffffff44; box-shadow:0 0 0 4px #ffffff10; }
+    .badge.solved .dot{ background:var(--gold); box-shadow:0 0 0 4px #ffd27d22; }
+    .title{
+      margin:0;
+      font-size:18px;
+      letter-spacing:.2px;
+    }
+    .unlock{
+      color:var(--muted);
+      font-size:12px;
+      margin-top:4px;
+    }
+
+    /* modal */
+    .modal{
+      position:fixed; inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      padding:18px;
+      background:#00000080;
+      backdrop-filter: blur(8px);
+      z-index:50;
+    }
+    .modal.show{ display:flex; }
+    .modalBox{
+      width:min(820px, 100%);
+      border-radius:22px;
+      border:1px solid #ffffff2a;
+      background:linear-gradient(180deg, #19001c, #0c000e);
+      box-shadow:0 30px 100px #000000aa;
+      padding:18px;
+      position:relative;
+      overflow:hidden;
+    }
+    .modalBox:before{
+      content:"";
+      position:absolute; inset:-2px;
+      background:
+        radial-gradient(700px 300px at 10% 0%, #ff2d5530, transparent 60%),
+        radial-gradient(600px 300px at 90% 0%, #ff5ea830, transparent 60%),
+        radial-gradient(700px 400px at 50% 120%, #ffd27d18, transparent 60%);
+      pointer-events:none;
+    }
+    .modalInner{ position:relative; }
+    .modalHead{
+      display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+      margin-bottom:10px;
+    }
+    .modalHead h3{ margin:0; }
+    .x{
+      border:none;
+      background:#ffffff12;
+      color:#fff;
+      border-radius:12px;
+      padding:10px 12px;
+      cursor:pointer;
+      border:1px solid #ffffff22;
+      user-select:none;
+    }
+    .hr{
+      height:1px;
+      background:#ffffff18;
+      margin:10px 0 12px;
+    }
+
+    .prompt{
+      margin:10px 0 12px;
+      padding:12px;
+      border-radius:14px;
+      border:1px solid #ffffff22;
+      background:linear-gradient(180deg, #ffffff10, #ffffff08);
+      color:#fff1f7;
+      white-space:pre-wrap;
+      line-height:1.35;
+    }
+
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+      flex-wrap:wrap;
+    }
+
+    input[type="text"]{
+      width:100%;
+      padding:12px 12px;
+      border-radius:14px;
+      border:1px solid #ffffff22;
+      background:#0b000e66;
+      color:var(--text);
+      outline:none;
+      box-shadow: inset 0 0 0 1px #00000022;
+      font-size:14px;
+      font-family:var(--sans);
+    }
+    input[type="text"]::placeholder{ color:#ffd6e680; }
+
+    .small{
+      font-size:12px;
+      color:var(--muted);
+      margin-top:10px;
+      line-height:1.35;
+    }
+    .msg{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid #ffffff22;
+      background:#ffffff10;
+      display:none;
+      line-height:1.35;
+    }
+    .msg.ok{ display:block; border-color:#40ffb055; background:#40ffb015; color:#d9fff0; }
+    .msg.bad{ display:block; border-color:#ff4d6d55; background:#ff4d6d14; color:#ffe3ea; }
+
+    .reveal{
+      margin-top:12px;
+      padding:12px;
+      border-radius:14px;
+      border:1px dashed #ffd27d55;
+      background:linear-gradient(180deg, #ffd27d18, #ffffff06);
+      display:none;
+    }
+    .reveal.show{ display:block; }
+    .reveal h4{
+      margin:0 0 6px;
+      font-size:14px;
+      color:#ffe7b9;
+      letter-spacing:.2px;
+    }
+    .reveal p{ margin:0; color:#fff7fb; }
+    .reveal img{
+      margin-top:10px;
+      max-width:100%;
+      border-radius:14px;
+      border:1px solid #ffffff22;
+      display:block;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="noise"></div>
+  <div class="hearts" id="hearts"></div>
+  <div class="emojiLayer" id="emojiLayer"></div>
+
+  <div class="wrap">
+    <header>
+      <div class="brand">
+        <!-- Put your image next to this HTML file and name it: couple.jpeg (or change src below). -->
+        <div class="logoWrap" aria-hidden="true">
+          <img class="logoImg" src="couple.jpeg" alt="">
+        </div>
+        <div>
+          <h1>Valentine Riddle Quest 💘</h1>
+          <p class="sub">11 riddles. One heart. Every other day. Solve to unlock surprises.</p>
+        </div>
+      </div>
+
+      <div class="top-right">
+        <div class="pill" title="Runs on this device time (client-side)">
+          <span>📍</span><b id="tz">Local Time</b> <span id="nowTxt"></span>
+        </div>
+        <button class="btn" id="btnReset">Reset progress</button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="countdown">
+          <div class="label">Next unlock in</div>
+          <div class="time" id="countdown">—</div>
+          <div class="small" id="nextUnlockTxt">—</div>
+        </div>
+        <div class="progress">
+          <div class="label">Progress</div>
+          <div class="row" style="justify-content:space-between">
+            <div class="small"><span id="solvedCount">0</span> / 11 solved</div>
+            <div class="small">Start: <span id="startTxt">—</span></div>
+          </div>
+          <div class="bar" aria-label="progress bar"><div id="barFill"></div></div>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="list" id="grid"></section>
+  </div>
+
+  <!-- Riddle Modal -->
+  <div class="modal" id="riddleModal">
+    <div class="modalBox" role="dialog" aria-modal="true" aria-labelledby="riddleTitle">
+      <div class="modalInner">
+        <div class="modalHead">
+          <div>
+            <h3 id="riddleTitle">Riddle</h3>
+            <div class="small" id="riddleMeta">—</div>
+          </div>
+          <button class="x" id="closeRiddle">✕</button>
+        </div>
+        <div class="hr"></div>
+
+        <div class="prompt" id="riddlePrompt">—</div>
+
+        <div class="row">
+          <div style="flex:1 1 240px; min-width:240px;">
+            <input id="riddleAnswer" type="text" placeholder="Type your answer…" />
+          </div>
+          <button class="btn hot" id="submitRiddle" style="flex:0 0 auto;">Submit</button>
+        </div>
+
+        <div class="msg" id="riddleMsg"></div>
+
+        <div class="reveal" id="riddleReveal">
+          <h4>Unlocked 💝</h4>
+          <div id="rewardBox"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/**
+ * =========================
+ * CONFIG
+ * =========================
+ */
+const UNLOCK_HOUR = 22;          // 10pm for the schedule (riddle #2 and onwards)
+const UNLOCK_MIN  = 0;
+const UNLOCK_EVERY_DAYS = 2;
+
+// TEST: force riddle #1 unlocked no matter what
+const FORCE_RIDDLE_1_UNLOCKED = false;
+
+const STORAGE_KEY_PROGRESS = "valentine_riddles_v1_progress";
+
+/**
+ * RIDDLES (edit this in code as you go)
+ */
+const RIDDLES = Array.from({length: 11}, (_, idx) => ({
+  title: `Riddle ${idx+1}`,
+  prompt: "Your riddle text goes here…",
+  answers: "answer",
+  reward: { type: "text", value: "🎁 Reward goes here…" }
+}));
+
+// Set riddle #1 for your test
+RIDDLES[0] = {
+  title: "You're always happy to see me.",
+  prompt: "You're always happy to see me.",
+  answers: "flower",
+  reward: { type: "text", value: "🌸🌼🌺" }
+};
+
+function normalize(s){
+  return (s ?? "")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+function getStartDate(){
+  // Normal behavior: "start" anchors the schedule at 10pm of "today".
+  // For testing, we still anchor it, but riddle #1 is forced unlocked anyway.
+  const now = new Date();
+  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), UNLOCK_HOUR, UNLOCK_MIN, 0, 0);
+  // If it's already past tonight 10pm, start now (so you can test late at night).
+  if (now > start) return now;
+  return start;
+}
+
+function addDays(date, d){
+  const x = new Date(date.getTime());
+  x.setDate(x.getDate() + d);
+  return x;
+}
+
+function formatDateTime(d){
+  return new Intl.DateTimeFormat(undefined, {
+    weekday:"short", year:"numeric", month:"short", day:"2-digit",
+    hour:"2-digit", minute:"2-digit"
+  }).format(d);
+}
+
+function formatCountdown(ms){
+  const totalSeconds = Math.floor(ms / 1000);
+  const days = Math.floor(totalSeconds / 86400);
+  const hours = Math.floor((totalSeconds % 86400) / 3600);
+  const mins = Math.floor((totalSeconds % 3600) / 60);
+  const secs = totalSeconds % 60;
+  const pad = (n)=> String(n).padStart(2,"0");
+  return `${days}d ${pad(hours)}:${pad(mins)}:${pad(secs)}`;
+}
+
+function loadProgress(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY_PROGRESS);
+    if(!raw) return { solved: {} };
+    const obj = JSON.parse(raw);
+    if(!obj || typeof obj !== "object") return { solved: {} };
+    if(!obj.solved) obj.solved = {};
+    return obj;
+  } catch { return { solved: {} }; }
+}
+
+function saveProgress(p){
+  localStorage.setItem(STORAGE_KEY_PROGRESS, JSON.stringify(p));
+}
+
+function escapeHtml(s){
+  return (s ?? "").toString()
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+function renderRewardInto(el, reward){
+  const type = reward?.type ?? "text";
+  const value = reward?.value ?? "";
+  if(type === "text"){
+    el.innerHTML = `<p style="margin:0;">${escapeHtml(value)}</p>`;
+    return;
+  }
+  el.innerHTML = `
+    <p class="small" style="margin:0 0 8px;">🖼️ Reward</p>
+    <img src="${escapeHtml(value)}" alt="reward" />
+  `;
+}
+
+function unlockDate(start, index){
+  return addDays(start, index * UNLOCK_EVERY_DAYS);
+}
+
+function isUnlocked(start, index){
+  if (FORCE_RIDDLE_1_UNLOCKED && index === 0) return true;
+  const unlockAt = unlockDate(start, index);
+  return new Date() >= unlockAt;
+}
+
+function closeModal(id){
+  document.getElementById(id)?.classList.remove("show");
+}
+
+/**
+ * =========================
+ * LIST
+ * =========================
+ */
+let currentRiddleIndex = null;
+
+function buildCard(start, i, item, progress){
+  const unlocked = isUnlocked(start, i);
+  const solved = !!progress.solved[i];
+
+  const card = document.createElement("div");
+  card.className = "card" + (!unlocked ? " disabled" : "");
+
+  const badge = document.createElement("div");
+  badge.className = "badge " + (solved ? "solved" : (unlocked ? "open" : "locked"));
+  badge.innerHTML = `<span class="dot"></span>${solved ? "Solved" : (unlocked ? "Unlocked" : "Locked")}`;
+
+  const top = document.createElement("div");
+  top.className = "top";
+
+  const left = document.createElement("div");
+  left.innerHTML = `
+    <div style="display:flex; flex-direction:column; gap:2px">
+      <div class="title">${escapeHtml(item.title ?? `Riddle ${i+1}`)} <span style="opacity:.75">#${i+1}</span></div>
+      <div class="unlock">${unlocked ? "Tap to open ❤️" : `Unlocks: ${formatDateTime(unlockDate(start, i))}`}</div>
+    </div>
+  `;
+
+  top.appendChild(left);
+  top.appendChild(badge);
+  card.appendChild(top);
+
+  card.addEventListener("click", () => {
+    if(!unlocked) return;
+    openRiddleModal(i);
+  });
+
+  return card;
+}
+
+function updateProgressUI(start, progress){
+  const solvedCount = Object.keys(progress.solved || {}).length;
+  document.getElementById("solvedCount").textContent = solvedCount.toString();
+
+  const pct = Math.round((solvedCount / RIDDLES.length) * 100);
+  document.getElementById("barFill").style.width = pct + "%";
+
+  const now = new Date();
+  let nextIndex = -1;
+  for(let i=0;i<RIDDLES.length;i++){
+    if(!isUnlocked(start, i)){
+      nextIndex = i;
+      break;
+    }
+  }
+  const cd = document.getElementById("countdown");
+  const nxt = document.getElementById("nextUnlockTxt");
+
+  if(nextIndex === -1){
+    cd.textContent = "All unlocked 💍";
+    nxt.textContent = "Everything is open. Now solve them all 😏";
+  } else {
+    const at = unlockDate(start, nextIndex);
+    const ms = Math.max(0, at - now);
+    cd.textContent = formatCountdown(ms);
+    nxt.textContent = `Next: Riddle #${nextIndex+1} at ${formatDateTime(at)}`;
+  }
+}
+
+function renderList(){
+  document.getElementById("tz").textContent =
+    Intl.DateTimeFormat().resolvedOptions().timeZone || "Local Time";
+
+  const progress = loadProgress();
+  const start = progress._start ? new Date(progress._start) : getStartDate();
+
+  if(!progress._start){
+    progress._start = start.toISOString();
+    saveProgress(progress);
+  }
+
+  document.getElementById("startTxt").textContent = formatDateTime(start);
+
+  const list = document.getElementById("grid");
+  list.innerHTML = "";
+  RIDDLES.forEach((r, i) => list.appendChild(buildCard(start, i, r, progress)));
+
+  updateProgressUI(start, progress);
+}
+
+/**
+ * =========================
+ * RIDDLE MODAL
+ * =========================
+ */
+function openRiddleModal(i){
+  const progress = loadProgress();
+  const start = new Date(progress._start);
+  const item = RIDDLES[i];
+
+  currentRiddleIndex = i;
+
+  const unlocked = isUnlocked(start, i);
+  const solved = !!progress.solved[i];
+
+  const modal = document.getElementById("riddleModal");
+  const title = document.getElementById("riddleTitle");
+  const meta  = document.getElementById("riddleMeta");
+  const prompt= document.getElementById("riddlePrompt");
+  const input = document.getElementById("riddleAnswer");
+  const msg   = document.getElementById("riddleMsg");
+  const reveal= document.getElementById("riddleReveal");
+  const rewardBox = document.getElementById("rewardBox");
+  const btn   = document.getElementById("submitRiddle");
+
+  title.textContent = `${item.title ?? `Riddle ${i+1}`}  #${i+1}`;
+  meta.textContent = solved
+    ? "Solved 💛"
+    : (unlocked ? "Ready to solve ❤️" : `Locked until ${formatDateTime(unlockDate(start,i))}`);
+
+  prompt.textContent = unlocked
+    ? (item.prompt ?? "")
+    : "🔒 This riddle is still locked.\nCome back when the heart unlocks it.";
+
+  msg.className = "msg";
+  msg.textContent = "";
+
+  input.value = "";
+  input.disabled = !unlocked || solved;
+  btn.disabled = !unlocked || solved;
+  btn.textContent = solved ? "Solved 💛" : "Submit";
+
+  if(solved){
+    reveal.classList.add("show");
+    renderRewardInto(rewardBox, item.reward);
+  } else {
+    reveal.classList.remove("show");
+    rewardBox.innerHTML = "";
+  }
+
+  modal.classList.add("show");
+  if(!input.disabled) setTimeout(() => input.focus(), 0);
+}
+
+function isFlowerEmoji(s){
+  // Small set is enough for your “emoji guess” requirement
+  const flowers = new Set(["🌸","🌼","🌺","🌷","💐","🌹","🥀","🪷","🪻"]);
+  return [...(s ?? "")].every(ch => flowers.has(ch));
+}
+
+function popFlowerEmojis(n=18){
+  const layer = document.getElementById("emojiLayer");
+  const choices = ["🌸","🌼","🌺","🌷","💐","🌹","🪷","🪻"];
+
+  for(let i=0;i<n;i++){
+    const e = document.createElement("div");
+    e.className = "emoji";
+    e.textContent = choices[Math.floor(Math.random()*choices.length)];
+
+    const left = 30 + Math.random() * 40;     // centered-ish
+    const size = 18 + Math.random() * 16;
+    const dur  = 2.6 + Math.random() * 2.4;
+
+    e.style.left = left + "vw";
+    e.style.fontSize = size + "px";
+    e.style.animationDuration = dur + "s";
+    e.style.opacity = "0";
+
+    layer.appendChild(e);
+    setTimeout(() => e.remove(), (dur * 1000) + 250);
+  }
+}
+
+function submitRiddle(){
+  if(currentRiddleIndex === null) return;
+
+  const i = currentRiddleIndex;
+  const progress = loadProgress();
+  const item = RIDDLES[i];
+
+  const input = document.getElementById("riddleAnswer");
+  const msg = document.getElementById("riddleMsg");
+  const reveal = document.getElementById("riddleReveal");
+  const rewardBox = document.getElementById("rewardBox");
+  const btn = document.getElementById("submitRiddle");
+
+  const raw = (input.value ?? "").trim();
+  const ans = normalize(raw);
+
+  if(!raw){
+    msg.className = "msg bad";
+    msg.textContent = "Say something 😄";
+    return;
+  }
+
+  const accepted = (item.answers ?? "").toString().split("|").map(normalize).filter(Boolean);
+  const ok = accepted.includes(ans) || (i === 0 && isFlowerEmoji(raw)); // allow flower emojis for riddle #1
+
+  if(ok){
+    progress.solved[i] = { at: new Date().toISOString(), answer: raw };
+    saveProgress(progress);
+
+    msg.className = "msg ok";
+    msg.textContent = "Correct 💘";
+
+    input.disabled = true;
+    btn.disabled = true;
+    btn.textContent = "Solved 💛";
+
+    reveal.classList.add("show");
+    renderRewardInto(rewardBox, item.reward);
+
+    // flower emoji pop (requested)
+    popFlowerEmojis(22);
+
+    // refresh list badges
+    renderList();
+  } else {
+    msg.className = "msg bad";
+    msg.textContent = "Not quite… try again 😈";
+    input.select();
+  }
+}
+
+/**
+ * =========================
+ * HEARTS (ambient)
+ * =========================
+ */
+function spawnHearts(){
+  const container = document.getElementById("hearts");
+  const makeOne = () => {
+    const h = document.createElement("div");
+    h.className = "heart";
+    const left = Math.random() * 100;
+    const size = 10 + Math.random() * 16;
+    const dur = 6 + Math.random() * 6;
+    h.style.left = left + "vw";
+    h.style.width = size + "px";
+    h.style.height = size + "px";
+    h.style.animationDuration = dur + "s";
+    h.style.opacity = (0.45 + Math.random() * 0.45).toFixed(2);
+    container.appendChild(h);
+    setTimeout(() => h.remove(), (dur * 1000) + 200);
+  };
+
+  setInterval(() => {
+    for(let i=0;i<2;i++) makeOne();
+  }, 650);
+}
+
+/**
+ * =========================
+ * WIRE UI + START
+ * =========================
+ */
+function wireUI(){
+  // time tick
+  setInterval(() => {
+    document.getElementById("nowTxt").textContent =
+      "· " + new Intl.DateTimeFormat(undefined, { hour:"2-digit", minute:"2-digit", second:"2-digit" }).format(new Date());
+
+    const p = loadProgress();
+    const s = new Date(p._start || getStartDate());
+    updateProgressUI(s, p);
+  }, 1000);
+
+  // rerender list every 10s for unlock updates
+  setInterval(() => {
+    renderList();
+  }, 10000);
+
+  // reset progress
+  document.getElementById("btnReset").addEventListener("click", () => {
+    localStorage.removeItem(STORAGE_KEY_PROGRESS);
+    popFlowerEmojis(18);
+    renderList();
+  });
+
+  // riddle modal close
+  document.getElementById("closeRiddle").addEventListener("click", () => closeModal("riddleModal"));
+  document.getElementById("riddleModal").addEventListener("click", (e) => {
+    if(e.target.id === "riddleModal") closeModal("riddleModal");
+  });
+
+  // submit riddle
+  document.getElementById("submitRiddle").addEventListener("click", submitRiddle);
+  document.getElementById("riddleAnswer").addEventListener("keydown", (e) => {
+    if(e.key === "Enter") submitRiddle();
+  });
+}
+
+spawnHearts();
+wireUI();
+renderList();
+</script>
+</body>
+</html>
