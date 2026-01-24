@@ -731,9 +731,14 @@ function renderList(){
     Intl.DateTimeFormat().resolvedOptions().timeZone || "Local Time";
 
   const progress = loadProgress();
-  const start = progress._start ? new Date(progress._start) : getStartDate();
 
-  if(!progress._start){
+  const intendedStart = getStartDate(); // today at 22:00 (or now if already past 22:00)
+  let start = progress._start ? new Date(progress._start) : intendedStart;
+
+  // If you previously tested and _start is earlier than today's intended 10pm,
+  // force it back to today 10pm so things re-lock correctly.
+  if (!progress._start || start < intendedStart) {
+    start = intendedStart;
     progress._start = start.toISOString();
     saveProgress(progress);
   }
