@@ -680,7 +680,7 @@ function buildCard(start, i, item, progress){
   const left = document.createElement("div");
   left.innerHTML = `
     <div style="display:flex; flex-direction:column; gap:2px">
-      <div class="title">${escapeHtml(item.title ?? `Riddle ${i+1}`)} <span style="opacity:.75">#${i+1}</span></div>
+      <div class="title">${escapeHtml(unlocked ? (item.title ?? `Riddle ${i+1}`) : `Riddle ${i+1}`)} <span style="opacity:.75">#${i+1}</span></div>
       <div class="unlock">${unlocked ? "Tap to open ❤️" : `Unlocks: ${formatDateTime(unlockDate(start, i))}`}</div>
     </div>
   `;
