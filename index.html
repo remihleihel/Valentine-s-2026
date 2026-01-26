@@ -537,14 +537,21 @@
  * CONFIG
  * =========================
  */
-const UNLOCK_HOUR = 22;          // 10pm for the schedule (riddle #2 and onwards)
-const UNLOCK_MIN  = 0;
 const UNLOCK_EVERY_DAYS = 2;
 
 // TEST: force riddle #1 unlocked no matter what
 const FORCE_RIDDLE_1_UNLOCKED = false;
 
 const STORAGE_KEY_PROGRESS = "valentine_riddles_v1_progress";
+
+/**
+ * FIXED SCHEDULE (local device time)
+ * - Riddle 1 unlocked at Jan 24 2026, 22:00 (Beirut)
+ * - Riddle 2 unlocks at Jan 26 2026, 22:00 (you corrected this)
+ * - Riddle 3 unlocks 2 days after R2, etc.
+ */
+const R1_UNLOCK_AT = new Date(2026, 0, 24, 22, 0, 0, 0); // Jan 24 22:00
+const R2_BASE_AT   = new Date(2026, 0, 26, 22, 0, 0, 0); // Jan 26 22:00
 
 /**
  * RIDDLES (edit this in code as you go)
@@ -563,6 +570,12 @@ RIDDLES[0] = {
   answers: "flower",
   reward: { type: "text", value: "🌸🌼🌺" }
 };
+RIDDLES[1] = {
+  title: "You're gonna like t his one.",
+  prompt: "Your favorite gift I ever got you",
+  answers: "watch",   // use | for multiple accepted answers
+  reward: { type: "text", value: "Bravo, nsite eno lyom riddle, eltile bte2rafe mene, w eltile gay, MA ELIK SHI YOM _l_" }
+};
 
 function normalize(s){
   return (s ?? "")
@@ -570,16 +583,6 @@ function normalize(s){
     .trim()
     .toLowerCase()
     .replace(/\s+/g, " ");
-}
-
-function getStartDate(){
-  // Normal behavior: "start" anchors the schedule at 10pm of "today".
-  // For testing, we still anchor it, but riddle #1 is forced unlocked anyway.
-  const now = new Date();
-  const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), UNLOCK_HOUR, UNLOCK_MIN, 0, 0);
-  // If it's already past tonight 10pm, start now (so you can test late at night).
-  if (now > start) return now;
-  return start;
 }
 
 function addDays(date, d){
@@ -642,14 +645,19 @@ function renderRewardInto(el, reward){
   `;
 }
 
-function unlockDate(start, index){
-  return addDays(start, index * UNLOCK_EVERY_DAYS);
+/**
+ * =========================
+ * FIXED UNLOCK LOGIC (NO _start STORED)
+ * =========================
+ */
+function unlockDate(index){
+  if(index === 0) return new Date(R1_UNLOCK_AT.getTime());
+  return addDays(R2_BASE_AT, (index - 1) * UNLOCK_EVERY_DAYS);
 }
 
-function isUnlocked(start, index){
+function isUnlocked(index){
   if (FORCE_RIDDLE_1_UNLOCKED && index === 0) return true;
-  const unlockAt = unlockDate(start, index);
-  return new Date() >= unlockAt;
+  return new Date() >= unlockDate(index);
 }
 
 function closeModal(id){
@@ -663,8 +671,8 @@ function closeModal(id){
  */
 let currentRiddleIndex = null;
 
-function buildCard(start, i, item, progress){
-  const unlocked = isUnlocked(start, i);
+function buildCard(i, item, progress){
+  const unlocked = isUnlocked(i);
   const solved = !!progress.solved[i];
 
   const card = document.createElement("div");
@@ -681,7 +689,7 @@ function buildCard(start, i, item, progress){
   left.innerHTML = `
     <div style="display:flex; flex-direction:column; gap:2px">
       <div class="title">${escapeHtml(unlocked ? (item.title ?? `Riddle ${i+1}`) : `Riddle ${i+1}`)} <span style="opacity:.75">#${i+1}</span></div>
-      <div class="unlock">${unlocked ? "Tap to open ❤️" : `Unlocks: ${formatDateTime(unlockDate(start, i))}`}</div>
+      <div class="unlock">${unlocked ? "Tap to open ❤️" : `Unlocks: ${formatDateTime(unlockDate(i))}`}</div>
     </div>
   `;
 
@@ -697,7 +705,7 @@ function buildCard(start, i, item, progress){
   return card;
 }
 
-function updateProgressUI(start, progress){
+function updateProgressUI(progress){
   const solvedCount = Object.keys(progress.solved || {}).length;
   document.getElementById("solvedCount").textContent = solvedCount.toString();
 
@@ -707,7 +715,7 @@ function updateProgressUI(start, progress){
   const now = new Date();
   let nextIndex = -1;
   for(let i=0;i<RIDDLES.length;i++){
-    if(!isUnlocked(start, i)){
+    if(!isUnlocked(i)){
       nextIndex = i;
       break;
     }
@@ -719,7 +727,7 @@ function updateProgressUI(start, progress){
     cd.textContent = "All unlocked 💍";
     nxt.textContent = "Everything is open. Now solve them all 😏";
   } else {
-    const at = unlockDate(start, nextIndex);
+    const at = unlockDate(nextIndex);
     const ms = Math.max(0, at - now);
     cd.textContent = formatCountdown(ms);
     nxt.textContent = `Next: Riddle #${nextIndex+1} at ${formatDateTime(at)}`;
@@ -730,26 +738,16 @@ function renderList(){
   document.getElementById("tz").textContent =
     Intl.DateTimeFormat().resolvedOptions().timeZone || "Local Time";
 
+  // Show the schedule anchor as the first “every-2-days” base (Riddle 2)
+  document.getElementById("startTxt").textContent = formatDateTime(R2_BASE_AT);
+
   const progress = loadProgress();
-
-  const intendedStart = getStartDate(); // today at 22:00 (or now if already past 22:00)
-  let start = progress._start ? new Date(progress._start) : intendedStart;
-
-  // If you previously tested and _start is earlier than today's intended 10pm,
-  // force it back to today 10pm so things re-lock correctly.
-  if (!progress._start || start < intendedStart) {
-    start = intendedStart;
-    progress._start = start.toISOString();
-    saveProgress(progress);
-  }
-
-  document.getElementById("startTxt").textContent = formatDateTime(start);
 
   const list = document.getElementById("grid");
   list.innerHTML = "";
-  RIDDLES.forEach((r, i) => list.appendChild(buildCard(start, i, r, progress)));
+  RIDDLES.forEach((r, i) => list.appendChild(buildCard(i, r, progress)));
 
-  updateProgressUI(start, progress);
+  updateProgressUI(progress);
 }
 
 /**
@@ -759,12 +757,11 @@ function renderList(){
  */
 function openRiddleModal(i){
   const progress = loadProgress();
-  const start = new Date(progress._start);
   const item = RIDDLES[i];
 
   currentRiddleIndex = i;
 
-  const unlocked = isUnlocked(start, i);
+  const unlocked = isUnlocked(i);
   const solved = !!progress.solved[i];
 
   const modal = document.getElementById("riddleModal");
@@ -780,7 +777,7 @@ function openRiddleModal(i){
   title.textContent = `${item.title ?? `Riddle ${i+1}`}  #${i+1}`;
   meta.textContent = solved
     ? "Solved 💛"
-    : (unlocked ? "Ready to solve ❤️" : `Locked until ${formatDateTime(unlockDate(start,i))}`);
+    : (unlocked ? "Ready to solve ❤️" : `Locked until ${formatDateTime(unlockDate(i))}`);
 
   prompt.textContent = unlocked
     ? (item.prompt ?? "")
@@ -924,9 +921,7 @@ function wireUI(){
     document.getElementById("nowTxt").textContent =
       "· " + new Intl.DateTimeFormat(undefined, { hour:"2-digit", minute:"2-digit", second:"2-digit" }).format(new Date());
 
-    const p = loadProgress();
-    const s = new Date(p._start || getStartDate());
-    updateProgressUI(s, p);
+    updateProgressUI(loadProgress());
   }, 1000);
 
   // rerender list every 10s for unlock updates
@@ -934,9 +929,11 @@ function wireUI(){
     renderList();
   }, 10000);
 
-  // reset progress
+  // reset progress (FIXED: does not affect timing)
   document.getElementById("btnReset").addEventListener("click", () => {
-    localStorage.removeItem(STORAGE_KEY_PROGRESS);
+    const p = loadProgress();
+    p.solved = {};
+    saveProgress(p); // keep schedule intact
     popFlowerEmojis(18);
     renderList();
   });
